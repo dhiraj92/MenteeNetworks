@@ -122,10 +122,7 @@ class LogisticRegression(object):
         return loss
         # end-snippet-2
         
-    def menteeLoss(self,mentorLayer,menteeLayer):
-         squareDiff = T.mean(T.pow(mentorLayer-menteeLayer,2))
-         squareRootDiff = T.sqrt(squareDiff)
-         return squareRootDiff
+
          
         
 

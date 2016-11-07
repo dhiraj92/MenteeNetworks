@@ -458,34 +458,58 @@ def predict(dataset, n_hidden, n_in, n_out):
     # load the saved model
     classifier.params, classifier.logRegressionLayer.y_pred, classifier.logRegressionLayer.p_y_given_x,classifier.input,classifier.logRegressionLayer.input = pickle.load(open('best_model_mlp_params.pkl'))
     #pdb.set_trace()
+    classifier.params = [theano.shared(param.eval()) for param in classifier.params]
     predict_model = theano.function(
         inputs=[classifier.hiddenLayer.input],
         outputs=classifier.hiddenLayer.output)
     hidden_act = predict_model(test_set_x[:200])
-    print("Hidden outpusts:", hidden_act)
+    print("Hidden outputs:", hidden_act)
     print( "hidden output shape", hidden_act.shape)
     #pdb.set_trace()
-    logRegressionLayer = LogisticRegression(
-            input=classifier.hiddenLayer.output,
-            n_in=n_hidden,
-            n_out=n_out
-        )
-    logRegressionLayer.W = classifier.params[2]
-    logRegressionLayer.b = classifier.params[3]
-    logRegressionLayer.params = classifier.params[2:4]
+    classifier.logRegressionLayer.W = theano.shared(classifier.params[2].eval())
+    classifier.logRegressionLayer.b = theano.shared(classifier.params[3].eval())
+    classifier.logRegressionLayer.params = [theano.shared(param.eval()) for param in classifier.params[2:4]]
     predict_model_final = theano.function(
-       inputs=[classifier.logRegressionLayer.input],
+       inputs=[classifier.hiddenLayer.output],
         outputs=classifier.logRegressionLayer.y_pred)
     
     print("Expected values: ", test_set_y[:200])
     predicted_values = predict_model_final(hidden_act)
     print("Predicted values:", predicted_values)
-    mentloss = logRegressionLayer.menteeLoss(hidden_act,hidden_act)
-    print (mentloss)
+
     #pdb.set_trace()
 
+def predictW():
+    activation=T.tanh
+    dataset='mnist.pkl.gz'
+    datasets = load_data(dataset)
+    test_set_x, test_set_y = datasets[2]
+    test_set_x = test_set_x.get_value()
+    test_set_y = test_set_y.eval()
+    Params = pickle.load(open('best_model_mlp_params.pkl'))[0]
+    Wh = theano.shared(value = Params[0].eval(), name='Wh', borrow=True)
+    bh = theano.shared(value = Params[1].eval(), name='bh', borrow=True)
+    W = theano.shared(value = Params[2].eval(), name='W', borrow=True)
+    b = theano.shared(value = Params[3].eval(), name='b', borrow=True)
+    lin_output = T.dot(test_set_x, Wh) + bh
+    output = (
+        lin_output if activation is None
+        else activation(lin_output)
+        )
+    
+    temp = 1
+    p_y_given_x = T.nnet.softmax((T.dot(output, W) + b)/temp)
+    
+    # symbolic description of how to compute prediction as class whose
+    # probability is maximal
+    y_pred = T.argmax(p_y_given_x, axis=1)
+    pdb.set_trace()
+    # end-snippet-1
+
+
 if __name__ == '__main__':
-    #params = test_mlp()
+    predictW()
+    params = test_mlp()
     n_in=28 * 28
     n_hidden=500
     n_out=10

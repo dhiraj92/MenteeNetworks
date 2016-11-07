@@ -55,6 +55,34 @@ from logistic_sgd import LogisticRegression, load_data
 
 
 # start-snippet-1
+class MentorNetwork(object):
+        def __init__(self, input):        
+            activation=T.tanh
+    #        dataset='mnist.pkl.gz'
+    #        datasets = load_data(dataset)
+    #        test_set_x, test_set_y = datasets[2]
+    #        test_set_x = test_set_x.get_value()
+    #        test_set_y = test_set_y.eval()            
+            self.Params = pickle.load(open('best_model_mlp_params.pkl'))[0]
+            self.Wh = theano.shared(value = self.Params[0].eval(), name='Wh', borrow=True)
+            self.bh = theano.shared(value = self.Params[1].eval(), name='bh', borrow=True)
+            self.W = theano.shared(value = self.Params[2].eval(), name='W', borrow=True)
+            self.b = theano.shared(value = self.Params[3].eval(), name='b', borrow=True)
+            self.lin_output = T.dot(input, self.Wh) + self.bh
+            self.output = (
+                self.lin_output if activation is None
+                else activation(self.lin_output)
+                )
+            
+            temp = 1
+            self.p_y_given_x = T.nnet.softmax((T.dot(self.output, self.W) + self.b)/temp)
+            self.y_pred = T.argmax(self.p_y_given_x, axis=1)
+        
+        
+    
+    # symbolic description of how to compute prediction as class whose
+    # probability is maximal
+    
 class HiddenLayer(object):
     def __init__(self, rng, input, n_in, n_out, W=None, b=None,
                  activation=T.tanh):
@@ -144,6 +172,7 @@ class MLP(object):
     """
 
     def __init__(self, rng, input, n_in, n_hidden, n_out):
+        
         """Initialize the parameters for the multilayer perceptron
 
         :type rng: numpy.random.RandomState
@@ -178,7 +207,15 @@ class MLP(object):
 #        n_out=10,
 #        
 #    )
+
+            
+            #test_set_x = test_set_x.get_value()
+            #test_set_y = test_set_y.eval()
+            #test_set_x = input
+            
+            #x = T.matrix('x')
         
+            # Declare MLP classifier
         self.hiddenLayer = HiddenLayer(
             rng=rng,
             input=input,
@@ -186,7 +223,10 @@ class MLP(object):
             n_out=n_hidden,
             activation=T.tanh
         )
-        mentorHiddenOut,mentorSoftOut = predict(input)
+        self.MentorNetwork = MentorNetwork(            
+            input=input      
+        )
+
 
         # The logistic regression layer gets as input the hidden units
         # of the hidden layer
@@ -195,6 +235,31 @@ class MLP(object):
             n_in=n_hidden,
             n_out=n_out
         )
+#        classifierMentor = thenoMLP.MLP(
+#        rng=rng,
+#        input=input,
+#        n_in=28 * 28,
+#        n_hidden=500,        
+#        n_out=10  
+#        )
+#        classifierMentor.params, classifierMentor.logRegressionLayer.y_pred, classifierMentor.logRegressionLayer.p_y_given_x, classifierMentor.input,classifierMentor.logRegressionLayer.input = pickle.load(open('best_model_mlp_params.pkl'))
+#        #pdb.set_trace()
+#        self.Mentorhidden = (
+#                classifierMentor.hiddenLayer.output
+#            )
+#
+#        self.MentorSoft = theano.function(
+#            inputs=[classifierMentor.hiddenLayer.input],
+#            outputs=classifierMentor.hiddenLayer.output
+#            )
+        
+        self.hiddenError = (
+                T.sqrt(T.mean(T.pow(self.MentorNetwork.output-self.hiddenLayer.output,2)))
+        )
+        self.softError = (
+                T.sqrt(T.mean(T.pow(self.MentorNetwork.p_y_given_x-self.logRegressionLayer.p_y_given_x,2)))
+        )
+
         # end-snippet-2 start-snippet-3
         # L1 norm ; one regularization option is to enforce L1 norm to
         # be small
@@ -211,8 +276,8 @@ class MLP(object):
         )
         
         
-        self.hiddenCost = menteeHiddenLoss(self.hiddenLayer.output,mentorHiddenOut)
-        self.softCost = menteeHiddenLoss(self.logRegressionLayer.p_y_given_x,mentorSoftOut)
+        #self.hiddenCost =  menteeHiddenLoss(self.hiddenLayer.output,mentorHiddenOut)
+        #self.softCost = menteeHiddenLoss(self.logRegressionLayer.p_y_given_x,mentorSoftOut)
         # negative log likelihood of the MLP is given by the negative
         # log likelihood of the output of the model, computed in the
         # logistic regression layer
@@ -229,8 +294,20 @@ class MLP(object):
 
         # keep track of model input
         self.input = input
-        self.mentorHiddenOut = mentorHiddenOut
-        self.mentorSoftOut = mentorSoftOut
+        
+#    def hiddenError(self, x):
+#        
+#        squareDiff = T.mean(T.pow(self.Mentorhidden(x)-self.hiddenLayer.output,2))
+#        squareRootDiff = T.sqrt(squareDiff)
+#        return squareRootDiff
+#        
+#    def softError(self, x):
+#         
+#        squareDiff = T.mean(T.pow(self.MentorSoft(self.Mentorhidden(x))-self.logRegressionLayer.p_y_given_x,2))
+#        squareRootDiff = T.sqrt(squareDiff)
+#        return squareRootDiff
+#        
+#      
         
 
 
@@ -296,11 +373,12 @@ def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=10,
         input=x,
         n_in=28 * 28,
         n_hidden=n_hidden,        
-        n_out=10,
-
-        
+        n_out=10       
         
     )
+    
+
+     
 
     # start-snippet-4
     # the cost we minimize during training is the negative log likelihood of
@@ -308,18 +386,53 @@ def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=10,
     # here symbolically
     cost = (
         classifier.negative_log_likelihood(y)
-        + L1_reg * classifier.L1
-        + L2_reg * classifier.L2_sqr
+#        + L1_reg * classifier.L1
+#        + L2_reg * classifier.L2_sqr
     )    
     
     costHidden = (
-        classifier.hiddenCost
+        classifier.hiddenError
 
     )
     
     costSoft = (
-        classifier.softCost
+        classifier.softError
     )
+    
+    totalCost = (
+        cost +
+        costHidden +
+        costSoft
+    )    
+    # start-snippet-5
+    # compute the gradient of cost with respect to theta (sorted in params)
+    # the resulting gradients will be stored in a list gparams
+    gparams = [T.grad(totalCost, param) for param in classifier.params]
+    #gparamsSoft = [T.grad(costSoft, param) for param in classifier.params]
+    #gparamsHidden = [T.grad(costHidden, param) for param in classifier.params]    
+    # specify how to update the parameters of the model as a list of
+    # (variable, update expression) pairs
+
+    # given two lists of the same length, A = [a1, a2, a3, a4] and
+    # B = [b1, b2, b3, b4], zip generates a list C of same size, where each
+    # element is a pair formed from the two lists :
+    #    C = [(a1, b1), (a2, b2), (a3, b3), (a4, b4)]
+    updates = [
+        (param, param - learning_rate * (gparam ))
+        for param,gparam in zip(classifier.params, gparams)
+    ]
+    
+    train_model = theano.function(
+        inputs=[index],
+        outputs=totalCost,
+        updates=updates,
+        givens={
+            x: train_set_x[index * batch_size: (index + 1) * batch_size],
+            y: train_set_y[index * batch_size: (index + 1) * batch_size]
+
+        }
+    )
+
     # end-snippet-4
 
     # compiling a Theano function that computes the mistakes that are made
@@ -342,37 +455,11 @@ def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=10,
         }
     )
 
-    # start-snippet-5
-    # compute the gradient of cost with respect to theta (sorted in params)
-    # the resulting gradients will be stored in a list gparams
-    gparams = [T.grad(cost, param) for param in classifier.params]
-    gparamsSoft = [T.grad(costSoft, param) for param in classifier.params]
-    #gparamsHidden = [T.grad(costHidden, param) for param in classifier.params]    
-    # specify how to update the parameters of the model as a list of
-    # (variable, update expression) pairs
-
-    # given two lists of the same length, A = [a1, a2, a3, a4] and
-    # B = [b1, b2, b3, b4], zip generates a list C of same size, where each
-    # element is a pair formed from the two lists :
-    #    C = [(a1, b1), (a2, b2), (a3, b3), (a4, b4)]
-    updates = [
-        (param, param - learning_rate * (gparam + gparamSoft ))
-        for param,gparam,gparamSoft in zip(classifier.params, gparams, gparamsSoft)
-    ]
 
     # compiling a Theano function `train_model` that returns the cost, but
     # in the same time updates the parameter of the model based on the rules
     # defined in `updates`
-    train_model = theano.function(
-        inputs=[index],
-        outputs=cost,
-        updates=updates,
-        givens={
-            x: train_set_x[index * batch_size: (index + 1) * batch_size],
-            y: train_set_y[index * batch_size: (index + 1) * batch_size]
 
-        }
-    )
     # end-snippet-5
 
     ###############
@@ -452,9 +539,9 @@ def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=10,
                            test_score * 100.))
                         
                     #pdb.set_trace()
-                    with open('best_model_mlp_params.pkl', 'wb') as f:
-                        pickle.dump((classifier.params, classifier.logRegressionLayer.y_pred, classifier.logRegressionLayer.p_y_given_x,
-                 classifier.input,classifier.logRegressionLayer.input), f)
+#                    with open('best_model_mlp_params.pkl', 'wb') as f:
+#                        pickle.dump((classifier.params, classifier.logRegressionLayer.y_pred, classifier.logRegressionLayer.p_y_given_x,
+#                 classifier.input,classifier.logRegressionLayer.input), f)
 
             if patience <= iter:
                 done_looping = True
