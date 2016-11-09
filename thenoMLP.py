@@ -531,8 +531,8 @@ def predictW():
 
 
 if __name__ == '__main__':
-    predictW()
-    #params = test_mlp()
+#    predictW()
+    params = test_mlp()
     n_in=28 * 28
     n_hidden=500
     n_out=10

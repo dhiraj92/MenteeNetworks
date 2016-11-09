@@ -12,41 +12,39 @@ import numpy as np
 
 def plotGraphs():
     ## plot training errors vs epochs
+    
     savedParams = pickle.load(open('Error_dicr.pkl'))
     savedTrain = savedParams["train"]
     savedTrainArray = np.asarray(savedTrain)
     x = np.asarray(range(0,len(savedTrainArray)))
     plt.xlabel('Epochs')
-    plt.ylabel('Errors')
-    plt.title('Errors vs Epochs')
+    plt.ylabel('Training Error %')
+    plt.title('Training Errors vs Epochs')
     plt.plot(x,savedTrainArray)
+    plt.savefig('TrainingError.png')
+    plt.show()
     
     ## plot validation error
     savedValid = savedParams["valid"]
     savedValidArray = np.asarray(savedValid)
+    x = np.asarray(range(0,len(savedValidArray)))
+    plt.xlabel('Epochs')
+    plt.ylabel('Validation Error %')
+    plt.title('Validation Errors vs Epochs')
     plt.plot(x,savedValidArray)
-
+    plt.savefig('ValidationError.png')
+    plt.show()
+    
     ## plot test error
     savedTest = savedParams["test"]
     savedTestArray = np.asarray(savedTest)
-    plt.plot(x,savedTestArray)
-        
-    plt.legend(['Training Error','Validation Error','Test Error'],loc='upper right')
-    plt.savefig('Error.png')
+    x = np.asarray(range(0,len(savedTestArray)))  
+    plt.xlabel('Epochs')
+    plt.ylabel('Test Error %')
+    plt.title('Test Errors vs Epochs')
+    plt.plot(x,savedTestArray)    
+    plt.savefig('TestError.png')
     plt.show()
-    
-    ## plot validation errors vs epochs
-#    savedValid = savedParams["valid"]
-#    savedValidArray = np.asarray(savedValid)
-#    x = np.asarray(range(0,len(savedValidArray)))
-#    plt.xlabel('Epochs')
-#    plt.ylabel('Training Error')
-#    plt.title('Training error vs Epochs')
-#    plt.plot(x,savedValidArray)
-#    plt.savefig('validationError.png')
-#    plt.show()
-    
-    
     
 
 if __name__ == '__main__':
