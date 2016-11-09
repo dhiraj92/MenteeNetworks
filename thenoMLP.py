@@ -39,6 +39,7 @@ import timeit
 import pdb
 import numpy
 
+
 import theano
 import theano.tensor as T
 
@@ -536,6 +537,7 @@ if __name__ == '__main__':
     n_hidden=500
     n_out=10
     dataset='mnist.pkl.gz'
+    
     #predictW()
     #predict(dataset,n_hidden,n_in,n_out)
     #params = test_mlp()
