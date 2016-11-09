@@ -384,6 +384,9 @@ def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=10,
     # the cost we minimize during training is the negative log likelihood of
     # the model plus the regularization terms (L1 and L2); cost is expressed
     # here symbolically
+    alpha = 1
+    beta = 1
+    gamma = 1
     cost = (
         classifier.negative_log_likelihood(y)
 #        + L1_reg * classifier.L1
@@ -400,9 +403,9 @@ def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=10,
     )
     
     totalCost = (
-        cost +
-        costHidden +
-        costSoft
+        alpha*cost +
+        beta*costHidden +
+        gamma*costSoft
     )    
     # start-snippet-5
     # compute the gradient of cost with respect to theta (sorted in params)
@@ -487,24 +490,30 @@ def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=10,
     epoch = 0
     done_looping = False
     finalParams = [param for param in classifier.params]
-
+    minibatch_avg_cost_avg = []
+    errorDict = {}
+    errorDict['train'] = list()
+    errorDict['valid'] = list()
+    errorDict['test'] = list()
     while (epoch < n_epochs) and (not done_looping):
         
         epoch = epoch + 1
         #print (finalParams[0].eval())
         for minibatch_index in range(n_train_batches):
 
-            minibatch_avg_cost = train_model(minibatch_index)
-            #pdb.set_trace()
-            print("Training error",minibatch_avg_cost)
+            minibatch_avg_cost_avg.append(train_model(minibatch_index))
+            
+            #print("Training error",minibatch_avg_cost)
             # iteration number
             iter = (epoch - 1) * n_train_batches + minibatch_index
-            print(iter)
+            #print(iter)
+
             if (iter + 1) % validation_frequency == 0:
                 # compute zero-one loss on validation set
                 validation_losses = [validate_model(i) for i
                                      in range(n_valid_batches)]
                 this_validation_loss = numpy.mean(validation_losses)
+                errorDict['valid'].append(this_validation_loss*100)
 
                 print(
                     'epoch %i, minibatch %i/%i, validation error %f %%' %
@@ -516,6 +525,18 @@ def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=10,
                     )
                 )
 
+                this_training_loss = numpy.mean(minibatch_avg_cost_avg)
+                errorDict['train'].append(this_training_loss*100)
+
+                print(
+                    'epoch %i, minibatch %i/%i, training error %f %%' %
+                    (
+                        epoch,
+                        minibatch_index + 1,
+                        n_train_batches,
+                        this_training_loss * 100.
+                    )
+                )
                 # if we got the best validation score until now
                 if this_validation_loss < best_validation_loss:
                     #improve patience if loss improvement is good enough
@@ -532,6 +553,7 @@ def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=10,
                     test_losses = [test_model(i) for i
                                    in range(n_test_batches)]
                     test_score = numpy.mean(test_losses)
+                    errorDict['test'].append(test_score*100)
 
                     print(('     epoch %i, minibatch %i/%i, test error of '
                            'best model %f %%') %
@@ -539,14 +561,13 @@ def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=10,
                            test_score * 100.))
                         
                     #pdb.set_trace()
-#                    with open('best_model_mlp_params.pkl', 'wb') as f:
-#                        pickle.dump((classifier.params, classifier.logRegressionLayer.y_pred, classifier.logRegressionLayer.p_y_given_x,
-#                 classifier.input,classifier.logRegressionLayer.input), f)
-
+                    
             if patience <= iter:
                 done_looping = True
                 break
     #pdb.set_trace()
+    with open('Error_dicr.pkl', 'wb') as f:
+        pickle.dump(errorDict, f)           
     end_time = timeit.default_timer()
     print(('Optimization complete. Best validation score of %f %% '
            'obtained at iteration %i, with test performance %f %%') %

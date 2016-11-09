@@ -217,7 +217,7 @@ class MLP(object):
 
 
 
-def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=10,
+def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=200,
              dataset='mnist.pkl.gz', batch_size=20, n_hidden=500):
     """
     Demonstrate stochastic gradient descent optimization for a multilayer
@@ -253,7 +253,7 @@ def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=10,
     test_set_x, test_set_y = datasets[2]
 
     # compute number of minibatches for training, validation and testing
-    n_train_batches = train_set_x.get_value(borrow=True).shape[0] // batch_size
+    n_train_batches = train_set_x.get_value(borrow=True).shape[0] // batch_size 
     n_valid_batches = valid_set_x.get_value(borrow=True).shape[0] // batch_size
     n_test_batches = test_set_x.get_value(borrow=True).shape[0] // batch_size
     
@@ -315,8 +315,7 @@ def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=10,
     # compute the gradient of cost with respect to theta (sorted in params)
     # the resulting gradients will be stored in a list gparams
     gparams = [T.grad(cost, param) for param in classifier.params]
-    gparamsSoft = [T.grad(cost, param) for param in classifier.params]
-    gparamsHidden = [T.grad(cost, param) for param in classifier.params]    
+  
     # specify how to update the parameters of the model as a list of
     # (variable, update expression) pairs
 
@@ -368,24 +367,30 @@ def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=10,
     epoch = 0
     done_looping = False
     finalParams = [param for param in classifier.params]
-
+    minibatch_avg_cost_avg = []
+    errorDict = {}
+    errorDict['train'] = list()
+    errorDict['valid'] = list()
+    errorDict['test'] = list()
     while (epoch < n_epochs) and (not done_looping):
         
         epoch = epoch + 1
         #print (finalParams[0].eval())
         for minibatch_index in range(n_train_batches):
 
-            minibatch_avg_cost = train_model(minibatch_index)
-            #pdb.set_trace()
-            print("Training error",minibatch_avg_cost)
+            minibatch_avg_cost_avg.append(train_model(minibatch_index))
+            
+            #print("Training error",minibatch_avg_cost)
             # iteration number
             iter = (epoch - 1) * n_train_batches + minibatch_index
-            print(iter)
+            #print(iter)
+
             if (iter + 1) % validation_frequency == 0:
                 # compute zero-one loss on validation set
                 validation_losses = [validate_model(i) for i
                                      in range(n_valid_batches)]
                 this_validation_loss = numpy.mean(validation_losses)
+                errorDict['valid'].append(this_validation_loss*100)
 
                 print(
                     'epoch %i, minibatch %i/%i, validation error %f %%' %
@@ -397,6 +402,18 @@ def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=10,
                     )
                 )
 
+                this_training_loss = numpy.mean(minibatch_avg_cost_avg)
+                errorDict['train'].append(this_training_loss*100)
+
+                print(
+                    'epoch %i, minibatch %i/%i, training error %f %%' %
+                    (
+                        epoch,
+                        minibatch_index + 1,
+                        n_train_batches,
+                        this_training_loss * 100.
+                    )
+                )
                 # if we got the best validation score until now
                 if this_validation_loss < best_validation_loss:
                     #improve patience if loss improvement is good enough
@@ -413,6 +430,7 @@ def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=10,
                     test_losses = [test_model(i) for i
                                    in range(n_test_batches)]
                     test_score = numpy.mean(test_losses)
+                    errorDict['test'].append(test_score*100)
 
                     print(('     epoch %i, minibatch %i/%i, test error of '
                            'best model %f %%') %
@@ -428,6 +446,8 @@ def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=10,
                 done_looping = True
                 break
     #pdb.set_trace()
+    with open('Error_dicr.pkl', 'wb') as f:
+        pickle.dump(errorDict, f)           
     end_time = timeit.default_timer()
     print(('Optimization complete. Best validation score of %f %% '
            'obtained at iteration %i, with test performance %f %%') %
@@ -491,7 +511,7 @@ def predictW():
     bh = theano.shared(value = Params[1].eval(), name='bh', borrow=True)
     W = theano.shared(value = Params[2].eval(), name='W', borrow=True)
     b = theano.shared(value = Params[3].eval(), name='b', borrow=True)
-    lin_output = T.dot(test_set_x, Wh) + bh
+    lin_output = T.dot(test_set_x[:10], Wh) + bh
     output = (
         lin_output if activation is None
         else activation(lin_output)
@@ -503,16 +523,19 @@ def predictW():
     # symbolic description of how to compute prediction as class whose
     # probability is maximal
     y_pred = T.argmax(p_y_given_x, axis=1)
+    print ("predicted",y_pred.eval())
+    print ("excepted",test_set_y[:10])
     pdb.set_trace()
     # end-snippet-1
 
 
 if __name__ == '__main__':
     predictW()
-    params = test_mlp()
+    #params = test_mlp()
     n_in=28 * 28
     n_hidden=500
     n_out=10
     dataset='mnist.pkl.gz'
-    predict(dataset,n_hidden,n_in,n_out)
+    #predictW()
+    #predict(dataset,n_hidden,n_in,n_out)
     #params = test_mlp()
