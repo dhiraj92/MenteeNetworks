@@ -339,8 +339,8 @@ def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=10,
     # the model plus the regularization terms (L1 and L2); cost is expressed
     # here symbolically
     alpha = 1
-    beta = .5
-    gamma = .2
+    beta = .2
+    gamma = .8
     cost = (
         classifier.negative_log_likelihood(y)
 #        + L1_reg * classifier.L1
@@ -583,7 +583,7 @@ def predict(input):
     #pdb.set_trace()
 
 if __name__ == '__main__':
-    params = test_mlp()
+    params = test_mlp(dataset="data/backgroundVarImg.pkl.gz")
 
     dataset='mnist.pkl.gz'
     #predict(dataset,n_hidden,n_in,n_out)
