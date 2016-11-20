@@ -35,6 +35,17 @@ from logistic_sgd import LogisticRegression, load_data
 
 
 # start-snippet-1
+class TemperatureSoftmax(object):
+    def __init__(self, temperature=0.1):
+        self.temperature = temperature
+    
+    def softmax(self, x):
+        if self.temperature != 1:
+            e_x = T.exp(x / self.temperature)
+            return (e_x ) / (e_x.sum(axis=-1).dimshuffle(0, 'x') )
+        else:
+            return theano.tensor.nnet.softmax(x)
+
 class MentorNetwork(object):
         def __init__(self, input):        
             activation=T.tanh
@@ -55,7 +66,8 @@ class MentorNetwork(object):
                 )
             
             temp = 1
-            self.p_y_given_x = T.nnet.softmax((T.dot(self.output, self.W) + self.b)/temp)
+            temperature_softmax = TemperatureSoftmax(temperature=0.1)
+            self.p_y_given_x = temperature_softmax.softmax((T.dot(self.output, self.W) + self.b))
             self.y_pred = T.argmax(self.p_y_given_x, axis=1)
         
         
@@ -92,20 +104,7 @@ class HiddenLayer(object):
                            layer
         """
         self.input = input
-        # end-snippet-1
 
-        # `W` is initialized with `W_values` which is uniformely sampled
-        # from sqrt(-6./(n_in+n_hidden)) and sqrt(6./(n_in+n_hidden))
-        # for tanh activation function
-        # the output of uniform if converted using asarray to dtype
-        # theano.config.floatX so that the code is runable on GPU
-        # Note : optimal initialization of weights is dependent on the
-        #        activation function used (among other things).
-        #        For example, results presented in [Xavier10] suggest that you
-        #        should use 4 times larger initial weights for sigmoid
-        #        compared to tanh
-        #        We have no info for other function, so we use the same as
-        #        tanh.
         if W is None:
             W_values = numpy.asarray(
                 rng.uniform(
@@ -141,15 +140,6 @@ def menteeHiddenLoss(mentorLayer,menteeLayer):
     return squareRootDiff
 # start-snippet-2
 class MLP(object):
-    """Multi-Layer Perceptron Class
-
-    A multilayer perceptron is a feedforward artificial neural network model
-    that has one layer or more of hidden units and nonlinear activations.
-    Intermediate layers usually have as activation function tanh or the
-    sigmoid function (defined here by a ``HiddenLayer`` class)  while the
-    top layer is a softmax layer (defined here by a ``LogisticRegression``
-    class).
-    """
 
     def __init__(self, rng, input, n_in, n_hidden, n_out):
         
@@ -175,27 +165,6 @@ class MLP(object):
 
         """
 
-        # Since we are dealing with a one hidden layer MLP, this will translate
-        # into a HiddenLayer with a tanh activation function connected to the
-        # LogisticRegression layer; the activation function can be replaced by
-        # sigmoid or any other nonlinear function
-#    classifier = MLP(
-#        rng=rng,
-#        input=x,
-#        n_in=28 * 28,
-#        n_hidden=n_hidden = 500,
-#        n_out=10,
-#        
-#    )
-
-            
-            #test_set_x = test_set_x.get_value()
-            #test_set_y = test_set_y.eval()
-            #test_set_x = input
-            
-            #x = T.matrix('x')
-        
-            # Declare MLP classifier
         self.hiddenLayer = HiddenLayer(
             rng=rng,
             input=input,
@@ -215,24 +184,7 @@ class MLP(object):
             n_in=n_hidden,
             n_out=n_out
         )
-#        classifierMentor = thenoMLP.MLP(
-#        rng=rng,
-#        input=input,
-#        n_in=28 * 28,
-#        n_hidden=500,        
-#        n_out=10  
-#        )
-#        classifierMentor.params, classifierMentor.logRegressionLayer.y_pred, classifierMentor.logRegressionLayer.p_y_given_x, classifierMentor.input,classifierMentor.logRegressionLayer.input = pickle.load(open('best_model_mlp_params.pkl'))
-#        #pdb.set_trace()
-#        self.Mentorhidden = (
-#                classifierMentor.hiddenLayer.output
-#            )
-#
-#        self.MentorSoft = theano.function(
-#            inputs=[classifierMentor.hiddenLayer.input],
-#            outputs=classifierMentor.hiddenLayer.output
-#            )
-        
+
         self.hiddenError = (
                 T.sqrt(T.mean(T.pow(self.MentorNetwork.output-self.hiddenLayer.output,2)))
         )
@@ -255,9 +207,7 @@ class MLP(object):
             + (self.logRegressionLayer.W ** 2).sum()
         )
         
-        
-        #self.hiddenCost =  menteeHiddenLoss(self.hiddenLayer.output,mentorHiddenOut)
-        #self.softCost = menteeHiddenLoss(self.logRegressionLayer.p_y_given_x,mentorSoftOut)
+
         # negative log likelihood of the MLP is given by the negative
         # log likelihood of the output of the model, computed in the
         # logistic regression layer
@@ -274,21 +224,6 @@ class MLP(object):
 
         # keep track of model input
         self.input = input
-        
-#    def hiddenError(self, x):
-#        
-#        squareDiff = T.mean(T.pow(self.Mentorhidden(x)-self.hiddenLayer.output,2))
-#        squareRootDiff = T.sqrt(squareDiff)
-#        return squareRootDiff
-#        
-#    def softError(self, x):
-#         
-#        squareDiff = T.mean(T.pow(self.MentorSoft(self.Mentorhidden(x))-self.logRegressionLayer.p_y_given_x,2))
-#        squareRootDiff = T.sqrt(squareDiff)
-#        return squareRootDiff
-#        
-#      
-        
 
 
 
@@ -583,8 +518,5 @@ def predict(input):
     #pdb.set_trace()
 
 if __name__ == '__main__':
-    params = test_mlp(dataset="data/backgroundVarImg.pkl.gz")
+    params = test_mlp(dataset="data/mnist.pkl.gz")
 
-    dataset='mnist.pkl.gz'
-    #predict(dataset,n_hidden,n_in,n_out)
-    #params = test_mlp()

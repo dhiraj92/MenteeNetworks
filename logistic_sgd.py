@@ -20,6 +20,16 @@ import numpy
 import theano
 import theano.tensor as T
 
+class TemperatureSoftmax(object):
+    def __init__(self, temperature=0.1):
+        self.temperature = temperature
+    
+    def softmax(self, x):
+        if self.temperature != 1:
+            e_x = T.exp(x / self.temperature)
+            return (e_x ) / (e_x.sum(axis=-1).dimshuffle(0, 'x') )
+        else:
+            return theano.tensor.nnet.softmax(x)
 
 class LogisticRegression(object):
     """Multi-class Logistic Regression Class
@@ -74,8 +84,8 @@ class LogisticRegression(object):
         # x is a matrix where row-j  represents input training sample-j
         # b is a vector where element-k represent the free parameter of
         # hyperplane-k
-        temp = 1
-        self.p_y_given_x = T.nnet.softmax((T.dot(input, self.W) + self.b)/temp)
+        temperature_softmax = TemperatureSoftmax(temperature=0.1)
+        self.p_y_given_x = temperature_softmax.softmax((T.dot(input, self.W) + self.b))
 
         # symbolic description of how to compute prediction as class whose
         # probability is maximal
