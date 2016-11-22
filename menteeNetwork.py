@@ -227,7 +227,7 @@ class MLP(object):
 
 
 
-def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=10,
+def test_mlp(learning_rate=0.01, L1_reg=0.001, L2_reg=0.0001, n_epochs=10,
              dataset='mnist.pkl.gz', batch_size=20, n_hidden=500):
 
     datasets = load_data(dataset)
@@ -273,9 +273,11 @@ def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=10,
     # the cost we minimize during training is the negative log likelihood of
     # the model plus the regularization terms (L1 and L2); cost is expressed
     # here symbolically
-    alpha = 1
-    beta = .2
-    gamma = .8
+    alpha = theano.shared(value = 1.0, name='alpha', borrow=True)
+    beta = theano.shared(value = 1.0, name='beta', borrow=True)
+    gamma = theano.shared(value = 1.0, name='gamma', borrow=True)
+    
+    
     cost = (
         classifier.negative_log_likelihood(y)
 #        + L1_reg * classifier.L1
@@ -385,6 +387,25 @@ def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=10,
     errorDict['valid'] = list()
     errorDict['test'] = list()
     while (epoch < n_epochs) and (not done_looping):
+        print(alpha.get_value())
+        incAplha = T.dscalar('a')
+        incBeta = T.dscalar('b')
+        incGamma = T.dscalar('g')
+        hyperUpdatesAlph = theano.function([incAplha], alpha, updates=[(alpha, alpha+incAplha)])
+        hyperUpdatesBeta = theano.function([incBeta], beta, updates=[(beta, beta+incBeta)])
+        hyperUpdatesGamma = theano.function([incGamma], gamma, updates=[(gamma, gamma+incGamma)])
+        if epoch < 5:        
+            hyperUpdatesAlph(0.1)
+            hyperUpdatesGamma(-0.01)        
+            hyperUpdatesBeta(-0.02)
+        else :
+            hyperUpdatesAlph(-0.1)
+            hyperUpdatesGamma(-0.01)        
+            hyperUpdatesBeta(-0.02)
+            
+        
+        
+        print(alpha.get_value(),beta.get_value(),gamma.get_value())
         
         epoch = epoch + 1
         #print (finalParams[0].eval())
@@ -448,12 +469,13 @@ def test_mlp(learning_rate=0.01, L1_reg=0.00, L2_reg=0.0001, n_epochs=10,
                            'best model %f %%') %
                           (epoch, minibatch_index + 1, n_train_batches,
                            test_score * 100.))
-                        
+                    
                     #pdb.set_trace()
                     
             if patience <= iter:
                 done_looping = True
                 break
+
     #pdb.set_trace()
 
 
