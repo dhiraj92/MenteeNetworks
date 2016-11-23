@@ -386,6 +386,10 @@ def test_mlp(learning_rate=0.01, L1_reg=0.001, L2_reg=0.0001, n_epochs=10,
     errorDict['train'] = list()
     errorDict['valid'] = list()
     errorDict['test'] = list()
+    configDict = dict()
+    configDict['alpha'] = []
+    configDict['beta'] = []
+    configDict['gamma'] = []
     while (epoch < n_epochs) and (not done_looping):
         print(alpha.get_value())
         incAplha = T.dscalar('a')
@@ -402,9 +406,11 @@ def test_mlp(learning_rate=0.01, L1_reg=0.001, L2_reg=0.0001, n_epochs=10,
             hyperUpdatesAlph(-0.1)
             hyperUpdatesGamma(-0.01)        
             hyperUpdatesBeta(-0.02)
-            
         
-        
+        #pdb.set_trace()
+        configDict['alpha'].append(alpha.get_value().tolist())
+        configDict['beta'].append(beta.get_value().tolist())
+        configDict['gamma'].append(gamma.get_value().tolist())
         print(alpha.get_value(),beta.get_value(),gamma.get_value())
         
         epoch = epoch + 1
@@ -486,7 +492,9 @@ def test_mlp(learning_rate=0.01, L1_reg=0.001, L2_reg=0.0001, n_epochs=10,
     print(('The code for file ' +
            os.path.split(__file__)[1] +
            ' ran for %.2fm' % ((end_time - start_time) / 60.)), file=sys.stderr)
-    return finalParams
+           
+    #plot these two to understand how config and errorDict change 
+    return errorDict,configDict
     
 def predict(input):
     n_in=28 * 28
@@ -540,5 +548,7 @@ def predict(input):
     #pdb.set_trace()
 
 if __name__ == '__main__':
-    params = test_mlp(dataset="data/mnist.pkl.gz")
+    errorDict,configDict = test_mlp(dataset="data/mnist.pkl.gz")
+    #plot these two dicts 
+    
 
