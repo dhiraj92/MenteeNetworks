@@ -48,12 +48,7 @@ class TemperatureSoftmax(object):
 
 class MentorNetwork(object):
         def __init__(self, input):        
-            activation=T.tanh
-    #        dataset='mnist.pkl.gz'
-    #        datasets = load_data(dataset)
-    #        test_set_x, test_set_y = datasets[2]
-    #        test_set_x = test_set_x.get_value()
-    #        test_set_y = test_set_y.eval()            
+            activation=T.tanh         
             self.Params = pickle.load(open('best_model_mlp_params.pkl'))[0]
             self.Wh = theano.shared(value = self.Params[0].eval(), name='Wh', borrow=True)
             self.bh = theano.shared(value = self.Params[1].eval(), name='bh', borrow=True)
@@ -69,42 +64,12 @@ class MentorNetwork(object):
             temperature_softmax = TemperatureSoftmax(temperature=0.1)
             self.p_y_given_x = temperature_softmax.softmax((T.dot(self.output, self.W) + self.b))
             self.y_pred = T.argmax(self.p_y_given_x, axis=1)
-        
-        
-    
-    # symbolic description of how to compute prediction as class whose
-    # probability is maximal
+
     
 class HiddenLayer(object):
     def __init__(self, rng, input, n_in, n_out, W=None, b=None,
                  activation=T.tanh):
-        """
-        Typical hidden layer of a MLP: units are fully-connected and have
-        sigmoidal activation function. Weight matrix W is of shape (n_in,n_out)
-        and the bias vector b is of shape (n_out,).
-
-        NOTE : The nonlinearity used here is tanh
-
-        Hidden unit activation is given by: tanh(dot(input,W) + b)
-
-        :type rng: numpy.random.RandomState
-        :param rng: a random number generator used to initialize weights
-
-        :type input: theano.tensor.dmatrix
-        :param input: a symbolic tensor of shape (n_examples, n_in)
-
-        :type n_in: int
-        :param n_in: dimensionality of input
-
-        :type n_out: int
-        :param n_out: number of hidden units
-
-        :type activation: theano.Op or function
-        :param activation: Non linearity to be applied in the hidden
-                           layer
-        """
         self.input = input
-
         if W is None:
             W_values = numpy.asarray(
                 rng.uniform(
@@ -141,29 +106,7 @@ def menteeHiddenLoss(mentorLayer,menteeLayer):
 # start-snippet-2
 class MLP(object):
 
-    def __init__(self, rng, input, n_in, n_hidden, n_out):
-        
-        """Initialize the parameters for the multilayer perceptron
-
-        :type rng: numpy.random.RandomState
-        :param rng: a random number generator used to initialize weights
-
-        :type input: theano.tensor.TensorType
-        :param input: symbolic variable that describes the input of the
-        architecture (one minibatch)
-
-        :type n_in: int
-        :param n_in: number of input units, the dimension of the space in
-        which the datapoints lie
-
-        :type n_hidden: int
-        :param n_hidden: number of hidden units
-
-        :type n_out: int
-        :param n_out: number of output units, the dimension of the space in
-        which the labels lie
-
-        """
+    def __init__(self, rng, input, n_in, n_hidden, n_out):        
 
         self.hiddenLayer = HiddenLayer(
             rng=rng,
@@ -299,18 +242,9 @@ def test_mlp(learning_rate=0.01, L1_reg=0.001, L2_reg=0.0001, n_epochs=10,
         gamma*costSoft
     )    
     # start-snippet-5
-    # compute the gradient of cost with respect to theta (sorted in params)
-    # the resulting gradients will be stored in a list gparams
-    gparams = [T.grad(totalCost, param) for param in classifier.params]
-    #gparamsSoft = [T.grad(costSoft, param) for param in classifier.params]
-    #gparamsHidden = [T.grad(costHidden, param) for param in classifier.params]    
-    # specify how to update the parameters of the model as a list of
-    # (variable, update expression) pairs
 
-    # given two lists of the same length, A = [a1, a2, a3, a4] and
-    # B = [b1, b2, b3, b4], zip generates a list C of same size, where each
-    # element is a pair formed from the two lists :
-    #    C = [(a1, b1), (a2, b2), (a3, b3), (a4, b4)]
+    gparams = [T.grad(totalCost, param) for param in classifier.params]
+
     updates = [
         (param, param - learning_rate * (gparam ))
         for param,gparam in zip(classifier.params, gparams)
@@ -496,61 +430,12 @@ def test_mlp(learning_rate=0.01, L1_reg=0.001, L2_reg=0.0001, n_epochs=10,
     #plot these two to understand how config and errorDict change 
     return errorDict,configDict
     
-def predict(input):
-    n_in=28 * 28
-    n_hidden=500
-    n_out=10
-    
-    #test_set_x = test_set_x.get_value()
-    #test_set_y = test_set_y.eval()
-    #test_set_x = input
-    rng = numpy.random.RandomState(1234)
-    #x = T.matrix('x')
 
-    # Declare MLP classifier
-    classifier = thenoMLP.MLP(
-        rng=rng,
-        input=input,
-        n_in=n_in,
-        n_hidden=n_hidden,
-        n_out=n_out
-    )
-    
-    # load the saved model
-    classifier.params, classifier.logRegressionLayer.y_pred, classifier.logRegressionLayer.p_y_given_x,classifier.input,classifier.logRegressionLayer.input = pickle.load(open('best_model_mlp_params.pkl'))
-    #pdb.set_trace()
-    predict_model = theano.function(
-        inputs=[classifier.hiddenLayer.input],
-        outputs=classifier.hiddenLayer.output)
-    #pdb.set_trace()
-
-    hidden_act = predict_model(input)
-    
-    print("Hidden outpusts:", hidden_act)
-    print( "hidden output shape", hidden_act.shape)
-    #pdb.set_trace()
-    logRegressionLayer = LogisticRegression(
-            input=classifier.hiddenLayer.output,
-            n_in=n_hidden,
-            n_out=n_out
-        )
-
-    predict_model_final = theano.function(
-       inputs=[classifier.logRegressionLayer.input],
-        outputs=classifier.logRegressionLayer.p_y_given_x)
-    
-    #print("Expected values: ", test_set_y)
-    predicted_values = predict_model_final(hidden_act)
-    print("Predicted values:", predicted_values)
-    mentloss = logRegressionLayer.menteeLoss(hidden_act,hidden_act)
-    print (mentloss)
-    return hidden_act,predicted_values
-    #pdb.set_trace()
 import plotGraph
 if __name__ == '__main__':
     errorDict,configDict = test_mlp(dataset="data/mnist.pkl.gz")
     plotGraph.errorPlot(errorDict)
-    plotGraph.configDict(configDict)
+    plotGraph.configPlot(configDict)
     #plot these two dicts 
     
 
