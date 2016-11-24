@@ -10,7 +10,18 @@ import matplotlib.pyplot as plt
 import numpy as np
 #import pdb
 
-def plotGraphs(imageName):
+
+
+def errorPlot(errorDict):
+    #plot the validation and train errors
+    pass
+
+def configPlot(configDict):
+    #plot the validation and train errors
+    pass
+    
+def plotGraphs():
+
     ## plot training errors vs epochs    
 #    savedParams = pickle.load(open('Error_dicr.pkl'))
 #    savedTrain = savedParams["train"]
