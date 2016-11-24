@@ -550,7 +550,7 @@ import plotGraph
 if __name__ == '__main__':
     errorDict,configDict = test_mlp(dataset="data/mnist.pkl.gz")
     plotGraph.errorPlot(errorDict)
-    plotGraph.configDict(configDict)
+    plotGraph.configPlot(configDict)
     #plot these two dicts 
     
 

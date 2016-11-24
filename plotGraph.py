@@ -14,11 +14,47 @@ import numpy as np
 
 def errorPlot(errorDict):
     #plot the validation and train errors
-    pass
+    savedTrain = errorDict["train"]
+    savedTrainArray = np.asarray(savedTrain)
+    x = np.asarray(range(0,len(savedTrainArray)))
+   
+    plt.plot(x,savedTrainArray)
+    savedValid = errorDict["valid"]
+    savedValidArray = np.asarray(savedValid)
+    x = np.asarray(range(0,len(savedValidArray)))
+    
+    plt.plot(x,savedValidArray)
+    savedTest = errorDict["test"]
+    savedTestArray = np.asarray(savedTest)
+    x = np.asarray(range(0,len(savedTestArray))) 
+    plt.xlabel('Epochs')
+    plt.ylabel('Error %')
+    plt.plot(x,savedTestArray)  
+    plt.legend(['Train Error', 'Validation Error', 'Test Error'])
+    plt.title('Errors vs Epochs')
+    plt.savefig('Error.png')
+    plt.show()
+
 
 def configPlot(configDict):
     #plot the validation and train errors
-    pass
+    alphaList = configDict["alpha"]
+    betaList = configDict["beta"]   
+    gammaList = configDict["gamma"]
+    alphaArray = np.asarray(alphaList)
+    betaArray = np.asarray(betaList)
+    gammaArray = np.asarray(gammaList)
+    
+    x = np.asarray(range(0,len(alphaArray)))
+    plt.plot(x,alphaArray)
+    plt.plot(x,betaArray)
+    plt.plot(x,gammaArray)
+    plt.xlabel('Epochs')
+    plt.ylabel('Parameters')
+    plt.legend(['Alpha','Beta','Gamma'])
+    plt.title('Parameters')
+    plt.savefig('Parameters.png')
+    plt.show()
     
 def plotGraphs():
 
@@ -83,4 +119,5 @@ def plotGraphs():
 #    plt.show()
 
 if __name__ == '__main__':
+#    errorPlot()
     plotGraphs()
