@@ -546,9 +546,11 @@ def predict(input):
     print (mentloss)
     return hidden_act,predicted_values
     #pdb.set_trace()
-
+import plotGraph
 if __name__ == '__main__':
     errorDict,configDict = test_mlp(dataset="data/mnist.pkl.gz")
+    plotGraph.errorPlot(errorDict)
+    plotGraph.configDict(configDict)
     #plot these two dicts 
     
 
