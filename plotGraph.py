@@ -32,7 +32,7 @@ def errorPlot(errorDict):
     plt.plot(x,savedTestArray)  
     plt.legend(['Train Error', 'Validation Error', 'Test Error'])
     plt.title('Errors vs Epochs')
-    plt.savefig('Error.png')
+    plt.savefig('plots/Error.png')
     plt.show()
 
 
@@ -53,7 +53,7 @@ def configPlot(configDict):
     plt.ylabel('Parameters')
     plt.legend(['Alpha','Beta','Gamma'])
     plt.title('Parameters')
-    plt.savefig('Parameters.png')
+    plt.savefig('plots/Parameters.png')
     plt.show()
     
 def plotGraphs():
