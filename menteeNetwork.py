@@ -332,9 +332,9 @@ def test_mlp(learning_rate=0.01, L1_reg=0.001, L2_reg=0.0001, n_epochs=10,
             hyperUpdatesBeta(4.0/(epoch)**0.3)
         
         #pdb.set_trace()
-        configDict['alpha'].append(alpha.get_value().tolist())
-        configDict['beta'].append(beta.get_value().tolist())
-        configDict['gamma'].append(gamma.get_value().tolist())
+        configDict['alpha'].append(alpha.get_value().tolist()*0.01)
+        configDict['beta'].append(beta.get_value().tolist()*0.01)
+        configDict['gamma'].append(gamma.get_value().tolist()*0.01)
         print(alpha.get_value()*0.01,beta.get_value()*0.01,gamma.get_value()*0.01)
         
         epoch = epoch + 1
@@ -353,7 +353,7 @@ def test_mlp(learning_rate=0.01, L1_reg=0.001, L2_reg=0.0001, n_epochs=10,
                 validation_losses = [validate_model(i) for i
                                      in range(n_valid_batches)]
                 this_validation_loss = numpy.mean(validation_losses)
-                errorDict['valid'].append(this_validation_loss*100)
+                errorDict['valid'].append(this_validation_loss)
 
                 print(
                     'epoch %i, minibatch %i/%i, validation error %f %%' %
@@ -366,7 +366,7 @@ def test_mlp(learning_rate=0.01, L1_reg=0.001, L2_reg=0.0001, n_epochs=10,
                 )
 
                 this_training_loss = numpy.mean(minibatch_avg_cost_avg)
-                errorDict['train'].append(this_training_loss*100)
+                errorDict['train'].append(this_training_loss)
 
                 print(
                     'epoch %i, minibatch %i/%i, training error %f %%' %
@@ -419,7 +419,10 @@ def test_mlp(learning_rate=0.01, L1_reg=0.001, L2_reg=0.0001, n_epochs=10,
            os.path.split(__file__)[1] +
            ' ran for %.2fm' % ((end_time - start_time) / 60.)), file=sys.stderr)
            
-    #plot these two to understand how config and errorDict change 
+    #plot these two to understand how config and errorDict change
+    configDict['alpha'] = configDict['alpha'][1:]
+    configDict['beta'] = configDict['beta'][1:]
+    configDict['gamma'] = configDict['gamma'][1:]
     return errorDict,configDict
     
 
