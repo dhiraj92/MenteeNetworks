@@ -162,7 +162,7 @@ class MLP(object):
 
         # the parameters of the model are the parameters of the two layer it is
         # made out of
-        self.params = self.hiddenLayer.params + self.logRegressionLayer.params
+        self.params = self.hiddenLayer.params + self.logRegressionLayer.params 
         # end-snippet-3
 
         # keep track of model input
@@ -174,7 +174,7 @@ def test_mlp(learning_rate=0.01, L1_reg=0.001, L2_reg=0.0001, n_epochs=10,
              dataset='mnist.pkl.gz', batch_size=20, n_hidden=500):
 
     datasets = load_data(dataset)
-
+    #pdb.set_trace()
     train_set_x, train_set_y = datasets[0]
     valid_set_x, valid_set_y = datasets[1]
     test_set_x, test_set_y = datasets[2]
@@ -211,14 +211,9 @@ def test_mlp(learning_rate=0.01, L1_reg=0.001, L2_reg=0.0001, n_epochs=10,
     
 
      
-
-    # start-snippet-4
-    # the cost we minimize during training is the negative log likelihood of
-    # the model plus the regularization terms (L1 and L2); cost is expressed
-    # here symbolically
     alpha = theano.shared(value = 1.0, name='alpha', borrow=True)
-    beta = theano.shared(value = 1.0, name='beta', borrow=True)
-    gamma = theano.shared(value = 1.0, name='gamma', borrow=True)
+    beta = theano.shared(value = 4.0, name='beta', borrow=True)
+    gamma = theano.shared(value = 4.0, name='gamma', borrow=True)
     
     
     cost = (
@@ -261,10 +256,6 @@ def test_mlp(learning_rate=0.01, L1_reg=0.001, L2_reg=0.0001, n_epochs=10,
         }
     )
 
-    # end-snippet-4
-
-    # compiling a Theano function that computes the mistakes that are made
-    # by the model on a minibatch
     test_model = theano.function(
         inputs=[index],
         outputs=classifier.errors(y),
@@ -276,7 +267,8 @@ def test_mlp(learning_rate=0.01, L1_reg=0.001, L2_reg=0.0001, n_epochs=10,
 
     validate_model = theano.function(
         inputs=[index],
-        outputs=classifier.errors(y),
+        #outputs=classifier.errors(y),
+        outputs=cost,
         givens={
             x: valid_set_x[index * batch_size:(index + 1) * batch_size],
             y: valid_set_y[index * batch_size:(index + 1) * batch_size]
@@ -284,15 +276,7 @@ def test_mlp(learning_rate=0.01, L1_reg=0.001, L2_reg=0.0001, n_epochs=10,
     )
 
 
-    # compiling a Theano function `train_model` that returns the cost, but
-    # in the same time updates the parameter of the model based on the rules
-    # defined in `updates`
 
-    # end-snippet-5
-
-    ###############
-    # TRAIN MODEL #
-    ###############
     print('... training')
 
     # early-stopping parameters
@@ -314,7 +298,7 @@ def test_mlp(learning_rate=0.01, L1_reg=0.001, L2_reg=0.0001, n_epochs=10,
 
     epoch = 0
     done_looping = False
-    finalParams = [param for param in classifier.params]
+    #finalParams = [param for param in classifier.params]
     minibatch_avg_cost_avg = []
     errorDict = {}
     errorDict['train'] = list()
@@ -325,27 +309,33 @@ def test_mlp(learning_rate=0.01, L1_reg=0.001, L2_reg=0.0001, n_epochs=10,
     configDict['beta'] = []
     configDict['gamma'] = []
     while (epoch < n_epochs) and (not done_looping):
-        print(alpha.get_value())
+#        print(alpha.get_value())
         incAplha = T.dscalar('a')
         incBeta = T.dscalar('b')
         incGamma = T.dscalar('g')
-        hyperUpdatesAlph = theano.function([incAplha], alpha, updates=[(alpha, alpha+incAplha)])
-        hyperUpdatesBeta = theano.function([incBeta], beta, updates=[(beta, beta+incBeta)])
-        hyperUpdatesGamma = theano.function([incGamma], gamma, updates=[(gamma, gamma+incGamma)])
-        if epoch < 5:        
-            hyperUpdatesAlph(0.1)
-            hyperUpdatesGamma(-0.01)        
-            hyperUpdatesBeta(-0.02)
+        hyperUpdatesAlph = theano.function([incAplha], alpha, updates=[(alpha, incAplha)])
+        hyperUpdatesBeta = theano.function([incBeta], beta, updates=[(beta, incBeta)])
+        hyperUpdatesGamma = theano.function([incGamma], gamma, updates=[(gamma, incGamma)])
+        decreaseAlpha = 5
+        if epoch == 0:
+            hyperUpdatesAlph(1)
+            hyperUpdatesGamma(2.0)        
+            hyperUpdatesBeta(4.0)
+            
+        elif epoch <=  decreaseAlpha:        
+            hyperUpdatesAlph((epoch)**0.3)
+            hyperUpdatesGamma(2.0/(epoch)**0.1)        
+            hyperUpdatesBeta(4.0/(epoch)**0.1)
         else :
-            hyperUpdatesAlph(-0.1)
-            hyperUpdatesGamma(-0.01)        
-            hyperUpdatesBeta(-0.02)
+            hyperUpdatesAlph((decreaseAlpha)**0.3/(epoch-decreaseAlpha)**0.3)
+            hyperUpdatesGamma(2.0/(epoch)**0.3)        
+            hyperUpdatesBeta(4.0/(epoch)**0.3)
         
         #pdb.set_trace()
         configDict['alpha'].append(alpha.get_value().tolist())
         configDict['beta'].append(beta.get_value().tolist())
         configDict['gamma'].append(gamma.get_value().tolist())
-        print(alpha.get_value(),beta.get_value(),gamma.get_value())
+        print(alpha.get_value()*0.01,beta.get_value()*0.01,gamma.get_value()*0.01)
         
         epoch = epoch + 1
         #print (finalParams[0].eval())
@@ -394,6 +384,7 @@ def test_mlp(learning_rate=0.01, L1_reg=0.001, L2_reg=0.0001, n_epochs=10,
                         this_validation_loss < best_validation_loss *
                         improvement_threshold
                     ):
+                        #pdb.set_trace()
                         patience = max(patience, iter * patience_increase)
 
                     best_validation_loss = this_validation_loss
@@ -411,10 +402,11 @@ def test_mlp(learning_rate=0.01, L1_reg=0.001, L2_reg=0.0001, n_epochs=10,
                            test_score * 100.))
                     
                     #pdb.set_trace()
-                    
+            #print (patience,iter)      
             if patience <= iter:
-                done_looping = True
-                break
+                pass
+                #done_looping = True
+                #break
 
     #pdb.set_trace()
 
@@ -434,7 +426,7 @@ def test_mlp(learning_rate=0.01, L1_reg=0.001, L2_reg=0.0001, n_epochs=10,
 import plotGraph
 if __name__ == '__main__':
     errorDict,configDict = test_mlp(dataset="data/mnist.pkl.gz")
-    plotGraph.errorPlot(errorDict)
+    #plotGraph.errorPlot(errorDict)
     plotGraph.configPlot(configDict)
     #plot these two dicts 
     
