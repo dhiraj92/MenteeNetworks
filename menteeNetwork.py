@@ -59,9 +59,8 @@ class MentorNetwork(object):
                 self.lin_output if activation is None
                 else activation(self.lin_output)
                 )
-            
-            temp = 1
-            temperature_softmax = TemperatureSoftmax(temperature=0.1)
+
+            temperature_softmax = TemperatureSoftmax(temperature=0.7)
             self.p_y_given_x = temperature_softmax.softmax((T.dot(self.output, self.W) + self.b))
             self.y_pred = T.argmax(self.p_y_given_x, axis=1)
 
@@ -170,11 +169,11 @@ class MLP(object):
 
 
 
-def test_mlp(learning_rate=0.01, L1_reg=0.001, L2_reg=0.0001, n_epochs=10,
+def test_mlp(learning_rate=0.01, L1_reg=0.001, L2_reg=0.0001, n_epochs=200,
              dataset='mnist.pkl.gz', batch_size=20, n_hidden=500):
 
     datasets = load_data(dataset)
-    #pdb.set_trace()
+    
     train_set_x, train_set_y = datasets[0]
     valid_set_x, valid_set_y = datasets[1]
     test_set_x, test_set_y = datasets[2]
@@ -183,7 +182,9 @@ def test_mlp(learning_rate=0.01, L1_reg=0.001, L2_reg=0.0001, n_epochs=10,
     n_train_batches = train_set_x.get_value(borrow=True).shape[0] // batch_size
     n_valid_batches = valid_set_x.get_value(borrow=True).shape[0] // batch_size
     n_test_batches = test_set_x.get_value(borrow=True).shape[0] // batch_size
-    
+    print ("Dataset size",train_set_x.get_value(borrow=True).shape[0],valid_set_x.get_value(borrow=True).shape[0],
+           test_set_x.get_value(borrow=True).shape[0])
+    #pdb.set_trace()
     ######################
     # BUILD ACTUAL MODEL #
     ######################
@@ -308,7 +309,12 @@ def test_mlp(learning_rate=0.01, L1_reg=0.001, L2_reg=0.0001, n_epochs=10,
     configDict['alpha'] = []
     configDict['beta'] = []
     configDict['gamma'] = []
+    
+    
     while (epoch < n_epochs) and (not done_looping):
+        
+        
+        minibatch_avg_cost_avg = []
 #        print(alpha.get_value())
         incAplha = T.dscalar('a')
         incBeta = T.dscalar('b')
@@ -316,32 +322,83 @@ def test_mlp(learning_rate=0.01, L1_reg=0.001, L2_reg=0.0001, n_epochs=10,
         hyperUpdatesAlph = theano.function([incAplha], alpha, updates=[(alpha, incAplha)])
         hyperUpdatesBeta = theano.function([incBeta], beta, updates=[(beta, incBeta)])
         hyperUpdatesGamma = theano.function([incGamma], gamma, updates=[(gamma, incGamma)])
-        decreaseAlpha = 5
+        
+#        Obedient Network
+#        decreaseAlpha = 75
+#        if epoch == 115:
+#            learning_rate = learning_rate/10
+#        if epoch == 0:
+#            hyperUpdatesAlph(1)
+#            hyperUpdatesGamma(2.0)        
+#            hyperUpdatesBeta(4.0)
+#            
+#        elif epoch <=  decreaseAlpha: 
+#            
+#            hyperUpdatesAlph((epoch)**0.3)
+#            hyperUpdatesGamma(2.0/(epoch)**0.1)        
+#            hyperUpdatesBeta(4.0/(epoch)**0.1)
+#        else :            
+#            hyperUpdatesAlph((decreaseAlpha)**0.3/(epoch-decreaseAlpha)**0.3)
+#            hyperUpdatesGamma(2.0/(epoch)**0.3)        
+#            hyperUpdatesBeta(4.0/(epoch)**0.3)        
+        
+#        Obedient Network
+#        decreaseAlpha = 75
+#        if epoch == 115:
+#            learning_rate = learning_rate/10
+#        if epoch == 0:
+#            hyperUpdatesAlph(6.0)
+#            hyperUpdatesGamma(2.0)        
+#            hyperUpdatesBeta(4.0)
+#            
+#        elif epoch <=  decreaseAlpha: 
+#            
+#            hyperUpdatesAlph(6.0/(epoch)**0.1)
+#            hyperUpdatesGamma(2.0/(epoch)**0.1)        
+#            hyperUpdatesBeta(4.0/(epoch)**0.1)
+#        else :            
+#            hyperUpdatesAlph((epoch)**0.3)
+#            hyperUpdatesGamma(2.0/(epoch)**0.3)        
+#            hyperUpdatesBeta(4.0/(epoch)**0.3)     
+        
+        decreaseAlpha = 75
+        if epoch == 115:
+            learning_rate = learning_rate/10
         if epoch == 0:
-            hyperUpdatesAlph(1)
+            hyperUpdatesAlph(0)
             hyperUpdatesGamma(2.0)        
             hyperUpdatesBeta(4.0)
             
-        elif epoch <=  decreaseAlpha:        
-            hyperUpdatesAlph((epoch)**0.3)
+        elif epoch <=  decreaseAlpha: 
+            
+            hyperUpdatesAlph(0)
             hyperUpdatesGamma(2.0/(epoch)**0.1)        
             hyperUpdatesBeta(4.0/(epoch)**0.1)
-        else :
-            hyperUpdatesAlph((decreaseAlpha)**0.3/(epoch-decreaseAlpha)**0.3)
+        else :            
+            hyperUpdatesAlph(0)
             hyperUpdatesGamma(2.0/(epoch)**0.3)        
             hyperUpdatesBeta(4.0/(epoch)**0.3)
         
         #pdb.set_trace()
-        configDict['alpha'].append(alpha.get_value().tolist()*0.01)
-        configDict['beta'].append(beta.get_value().tolist()*0.01)
-        configDict['gamma'].append(gamma.get_value().tolist()*0.01)
-        print(alpha.get_value()*0.01,beta.get_value()*0.01,gamma.get_value()*0.01)
+
         
         epoch = epoch + 1
         #print (finalParams[0].eval())
+        tempfinalParams = list([param.get_value() for param in classifier.params])
         for minibatch_index in range(n_train_batches):
-
-            minibatch_avg_cost_avg.append(train_model(minibatch_index))
+            
+            trainLoss = train_model(minibatch_index)
+            if(numpy.isnan(trainLoss)):
+                print ("getting nan reducing learning rate")
+                #pdb.set_trace()
+                for x in range(len(tempfinalParams)):                    
+                    classifier.params[x].set_value(tempfinalParams[x])
+                learning_rate = learning_rate/100
+                epoch = epoch - 1
+                break
+                print ("getting nan reducing learning rate")
+                
+            minibatch_avg_cost_avg.append(trainLoss)
             
             #print("Training error",minibatch_avg_cost)
             # iteration number
@@ -353,6 +410,7 @@ def test_mlp(learning_rate=0.01, L1_reg=0.001, L2_reg=0.0001, n_epochs=10,
                 validation_losses = [validate_model(i) for i
                                      in range(n_valid_batches)]
                 this_validation_loss = numpy.mean(validation_losses)
+
                 errorDict['valid'].append(this_validation_loss)
 
                 print(
@@ -377,6 +435,9 @@ def test_mlp(learning_rate=0.01, L1_reg=0.001, L2_reg=0.0001, n_epochs=10,
                         this_training_loss * 100.
                     )
                 )
+                if(numpy.isnan(this_training_loss) or numpy.isnan(this_validation_loss)):
+                    learning_rate = learning_rate/10
+                    
                 # if we got the best validation score until now
                 if this_validation_loss < best_validation_loss:
                     #improve patience if loss improvement is good enough
@@ -402,14 +463,23 @@ def test_mlp(learning_rate=0.01, L1_reg=0.001, L2_reg=0.0001, n_epochs=10,
                            test_score * 100.))
                     
                     #pdb.set_trace()
-            #print (patience,iter)      
+            #print (patience,iter)
+
             if patience <= iter:
                 pass
                 #done_looping = True
                 #break
+        configDict['alpha'].append(alpha.get_value().tolist()*learning_rate)
+        configDict['beta'].append(beta.get_value().tolist()*learning_rate)
+        configDict['gamma'].append(gamma.get_value().tolist()*learning_rate)
+        print(alpha.get_value()*learning_rate,beta.get_value()*learning_rate,gamma.get_value()*learning_rate)
 
     #pdb.set_trace()
-
+    test_losses = [test_model(i) for i
+                   in range(n_test_batches)]
+    test_score = numpy.mean(test_losses)
+    print ("test errpr")
+    errorDict['test'].append(test_score*100)
 
     end_time = timeit.default_timer()
     print(('Optimization complete. Best validation score of %f %% '
@@ -423,13 +493,23 @@ def test_mlp(learning_rate=0.01, L1_reg=0.001, L2_reg=0.0001, n_epochs=10,
     configDict['alpha'] = configDict['alpha'][1:]
     configDict['beta'] = configDict['beta'][1:]
     configDict['gamma'] = configDict['gamma'][1:]
+    test_losses = [test_model(i) for i
+                   in range(n_test_batches)]
+    test_score = numpy.mean(test_losses)
+    errorDict['test'].append(test_score*100)
+
+    print(('     epoch %i, minibatch %i/%i, test error of '
+           'best model %f %%') %
+          (epoch, minibatch_index + 1, n_train_batches,
+           test_score * 100.))
+                    
     return errorDict,configDict
     
 
 import plotGraph
 if __name__ == '__main__':
-    errorDict,configDict = test_mlp(dataset="data/mnist.pkl.gz")
-    #plotGraph.errorPlot(errorDict)
+    errorDict,configDict = test_mlp(dataset="data/rotateImg.pkl.gz")
+    plotGraph.errorPlot(errorDict)
     plotGraph.configPlot(configDict)
     #plot these two dicts 
     

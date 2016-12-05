@@ -84,7 +84,7 @@ class LogisticRegression(object):
         # x is a matrix where row-j  represents input training sample-j
         # b is a vector where element-k represent the free parameter of
         # hyperplane-k
-        temperature_softmax = TemperatureSoftmax(temperature=0.1)
+        temperature_softmax = TemperatureSoftmax(temperature=0.7)
         self.p_y_given_x = temperature_softmax.softmax((T.dot(input, self.W) + self.b))
 
         # symbolic description of how to compute prediction as class whose
