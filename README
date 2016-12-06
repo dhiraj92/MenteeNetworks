@@ -16,7 +16,6 @@ MNIST + background images -	backgroundVarImg.pkl.gz
 MNIST + random background - backgroundRanImg.pkl.gz	
 Rotated MNIST digits - rotateImg.pkl.gz
 
-
 Steps to run Mentor:
 run the theanoMlP.py to run the mentor network.
 At the end of the run best_model_mlp_params.pkl is created which stores the parameters learned by mentor
@@ -27,3 +26,8 @@ run the mentee.py to run the mentor network.
 We have provided the MNIST datasets learned parameter, so directly running the mentee file will work
 Plots for the run are displayed at the end and are saved in the plots folder
 Data variations can be tried out by editing the dataset file name in main function
+
+Time to Run:
+On our system with 16gb ram, i7 intel processor
+Mentor : 30 to 35mins
+Mentee : 20 to 30mins

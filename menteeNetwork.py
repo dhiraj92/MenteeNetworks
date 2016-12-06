@@ -511,7 +511,7 @@ def test_mlp(learning_rate=0.01, L1_reg=0.001, L2_reg=0.0001, n_epochs=200,
 import plotGraph
 if __name__ == '__main__':
 #   data folder has other datasets too
-    errorDict,configDict = test_mlp(dataset="data/backgroundVarImg.pkl.gz")
+    errorDict,configDict = test_mlp(dataset="data/mnist.pkl.gz")
     plotGraph.errorPlot(errorDict)
     plotGraph.configPlot(configDict)
     #plot these two dicts 

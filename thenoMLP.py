@@ -405,7 +405,7 @@ def predictW():
 if __name__ == '__main__':
 #    predictW() 
 #   data folder has other datasets too
-    errorDict = test_mlp(dataset="data/rotateImg.pkl.gz")
+    errorDict = test_mlp(dataset="data/mnist.pkl.gz")
     #params = test_mlp()
     n_in=28 * 28
     n_hidden=500
