@@ -323,26 +323,26 @@ def test_mlp(learning_rate=0.01, L1_reg=0.001, L2_reg=0.0001, n_epochs=200,
         hyperUpdatesBeta = theano.function([incBeta], beta, updates=[(beta, incBeta)])
         hyperUpdatesGamma = theano.function([incGamma], gamma, updates=[(gamma, incGamma)])
         
-#        Obedient Network
-#        decreaseAlpha = 75
-#        if epoch == 115:
-#            learning_rate = learning_rate/10
-#        if epoch == 0:
-#            hyperUpdatesAlph(1)
-#            hyperUpdatesGamma(2.0)        
-#            hyperUpdatesBeta(4.0)
-#            
-#        elif epoch <=  decreaseAlpha: 
-#            
-#            hyperUpdatesAlph((epoch)**0.3)
-#            hyperUpdatesGamma(2.0/(epoch)**0.1)        
-#            hyperUpdatesBeta(4.0/(epoch)**0.1)
-#        else :            
-#            hyperUpdatesAlph((decreaseAlpha)**0.3/(epoch-decreaseAlpha)**0.3)
-#            hyperUpdatesGamma(2.0/(epoch)**0.3)        
-#            hyperUpdatesBeta(4.0/(epoch)**0.3)        
+#Obedient Network
+        decreaseAlpha = 75
+        if epoch == 115:
+            learning_rate = learning_rate/10
+        if epoch == 0:
+            hyperUpdatesAlph(1)
+            hyperUpdatesGamma(2.0)        
+            hyperUpdatesBeta(4.0)
+            
+        elif epoch <=  decreaseAlpha: 
+            
+            hyperUpdatesAlph((epoch)**0.3)
+            hyperUpdatesGamma(2.0/(epoch)**0.1)        
+            hyperUpdatesBeta(4.0/(epoch)**0.1)
+        else :            
+            hyperUpdatesAlph((decreaseAlpha)**0.3/(epoch-decreaseAlpha)**0.3)
+            hyperUpdatesGamma(2.0/(epoch)**0.3)        
+            hyperUpdatesBeta(4.0/(epoch)**0.3)        
         
-#        Obedient Network
+#Adamant Network
 #        decreaseAlpha = 75
 #        if epoch == 115:
 #            learning_rate = learning_rate/10
@@ -360,24 +360,25 @@ def test_mlp(learning_rate=0.01, L1_reg=0.001, L2_reg=0.0001, n_epochs=200,
 #            hyperUpdatesAlph((epoch)**0.3)
 #            hyperUpdatesGamma(2.0/(epoch)**0.3)        
 #            hyperUpdatesBeta(4.0/(epoch)**0.3)     
-        
-        decreaseAlpha = 75
-        if epoch == 115:
-            learning_rate = learning_rate/10
-        if epoch == 0:
-            hyperUpdatesAlph(0)
-            hyperUpdatesGamma(2.0)        
-            hyperUpdatesBeta(4.0)
-            
-        elif epoch <=  decreaseAlpha: 
-            
-            hyperUpdatesAlph(0)
-            hyperUpdatesGamma(2.0/(epoch)**0.1)        
-            hyperUpdatesBeta(4.0/(epoch)**0.1)
-        else :            
-            hyperUpdatesAlph(0)
-            hyperUpdatesGamma(2.0/(epoch)**0.3)        
-            hyperUpdatesBeta(4.0/(epoch)**0.3)
+
+#Gullible        
+#        decreaseAlpha = 75
+#        if epoch == 115:
+#            learning_rate = learning_rate/10
+#        if epoch == 0:
+#            hyperUpdatesAlph(0)
+#            hyperUpdatesGamma(2.0)        
+#            hyperUpdatesBeta(4.0)
+#            
+#        elif epoch <=  decreaseAlpha: 
+#            
+#            hyperUpdatesAlph(0)
+#            hyperUpdatesGamma(2.0/(epoch)**0.1)        
+#            hyperUpdatesBeta(4.0/(epoch)**0.1)
+#        else :            
+#            hyperUpdatesAlph(0)
+#            hyperUpdatesGamma(2.0/(epoch)**0.3)        
+#            hyperUpdatesBeta(4.0/(epoch)**0.3)
         
         #pdb.set_trace()
 
@@ -386,7 +387,8 @@ def test_mlp(learning_rate=0.01, L1_reg=0.001, L2_reg=0.0001, n_epochs=200,
         #print (finalParams[0].eval())
         tempfinalParams = list([param.get_value() for param in classifier.params])
         for minibatch_index in range(n_train_batches):
-            
+
+# this step takes a lot timme if you remove it training will be faster            
             trainLoss = train_model(minibatch_index)
             if(numpy.isnan(trainLoss)):
                 print ("getting nan reducing learning rate")
@@ -414,12 +416,12 @@ def test_mlp(learning_rate=0.01, L1_reg=0.001, L2_reg=0.0001, n_epochs=200,
                 errorDict['valid'].append(this_validation_loss)
 
                 print(
-                    'epoch %i, minibatch %i/%i, validation error %f %%' %
+                    'epoch %i, minibatch %i/%i, validation error %f ' %
                     (
                         epoch,
                         minibatch_index + 1,
                         n_train_batches,
-                        this_validation_loss * 100.
+                        this_validation_loss
                     )
                 )
 
@@ -427,12 +429,12 @@ def test_mlp(learning_rate=0.01, L1_reg=0.001, L2_reg=0.0001, n_epochs=200,
                 errorDict['train'].append(this_training_loss)
 
                 print(
-                    'epoch %i, minibatch %i/%i, training error %f %%' %
+                    'epoch %i, minibatch %i/%i, training error %f ' %
                     (
                         epoch,
                         minibatch_index + 1,
                         n_train_batches,
-                        this_training_loss * 100.
+                        this_training_loss
                     )
                 )
                 if(numpy.isnan(this_training_loss) or numpy.isnan(this_validation_loss)):
@@ -482,9 +484,9 @@ def test_mlp(learning_rate=0.01, L1_reg=0.001, L2_reg=0.0001, n_epochs=200,
     errorDict['test'].append(test_score*100)
 
     end_time = timeit.default_timer()
-    print(('Optimization complete. Best validation score of %f %% '
+    print(('Optimization complete. Best validation score of %f  '
            'obtained at iteration %i, with test performance %f %%') %
-          (best_validation_loss * 100., best_iter + 1, test_score * 100.))
+          (best_validation_loss, best_iter + 1, test_score * 100.))
     print(('The code for file ' +
            os.path.split(__file__)[1] +
            ' ran for %.2fm' % ((end_time - start_time) / 60.)), file=sys.stderr)
@@ -508,7 +510,8 @@ def test_mlp(learning_rate=0.01, L1_reg=0.001, L2_reg=0.0001, n_epochs=200,
 
 import plotGraph
 if __name__ == '__main__':
-    errorDict,configDict = test_mlp(dataset="data/rotateImg.pkl.gz")
+#   data folder has other datasets too
+    errorDict,configDict = test_mlp(dataset="data/backgroundVarImg.pkl.gz")
     plotGraph.errorPlot(errorDict)
     plotGraph.configPlot(configDict)
     #plot these two dicts 
