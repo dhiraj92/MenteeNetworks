@@ -1,0 +1,73 @@
+errorDict,configDict = test_mlp(dataset="data/rotateImg.pkl.gz")
+
+        decreaseAlpha = 75
+        if epoch == 115:
+            learning_rate = learning_rate/10
+        if epoch == 0:
+            hyperUpdatesAlph(1)
+            hyperUpdatesGamma(2.0)        
+            hyperUpdatesBeta(4.0)
+            
+        elif epoch <=  decreaseAlpha: 
+            
+            hyperUpdatesAlph((epoch)**0.3)
+            hyperUpdatesGamma(2.0/(epoch)**0.1)        
+            hyperUpdatesBeta(4.0/(epoch)**0.1)
+        else :            
+            hyperUpdatesAlph((decreaseAlpha)**0.3/(epoch-decreaseAlpha)**0.3)
+            hyperUpdatesGamma(2.0/(epoch)**0.3)        
+            hyperUpdatesBeta(4.0/(epoch)**0.3)
+
+epoch 200, minibatch 500/500, training error 26.488676 %
+0.000859986974637 0.000817342474683 0.000408671237341
+Optimization complete. Best validation score of 60.938986 % obtained at iteration 21000, with test performance 19.400000 %
+
+adamant:
+test errpr
+Optimization complete. Best validation score of 63.083374 % obtained at iteration 13500, with test performance 19.038000 %
+The code for file menteeNetwork.py ran for 25.54m
+     epoch 200, minibatch 500/500, test error of best model 19.038000 %
+
+--------------------------------------------------------------------------------------------------------------------
+
+errorDict,configDict = test_mlp(dataset="data/backgroundRanImg.pkl.gz")
+        decreaseAlpha = 75
+        if epoch == 115:
+            learning_rate = learning_rate/10
+        if epoch == 0:
+            hyperUpdatesAlph(1)
+            hyperUpdatesGamma(2.0)        
+            hyperUpdatesBeta(4.0)
+            
+        elif epoch <=  decreaseAlpha: 
+            
+            hyperUpdatesAlph((epoch)**0.3)
+            hyperUpdatesGamma(2.0/(epoch)**0.1)        
+            hyperUpdatesBeta(4.0/(epoch)**0.1)
+        else :            
+            hyperUpdatesAlph((decreaseAlpha)**0.3/(epoch-decreaseAlpha)**0.3)
+            hyperUpdatesGamma(2.0/(epoch)**0.3)        
+            hyperUpdatesBeta(4.0/(epoch)**0.3)
+
+test errpr
+Optimization complete. Best validation score of 79.794804 % obtained at iteration 3000, with test performance 24.576000 %
+The code for file menteeNetwork.py ran for 17.05m
+     epoch 200, minibatch 500/500, test error of best model 24.576000 %
+
+adamnat
+test errpr
+Optimization complete. Best validation score of 79.485379 % obtained at iteration 2000, with test performance 23.716000 %
+The code for file menteeNetwork.py ran for 22.32m
+     epoch 200, minibatch 500/500, test error of best model 23.716000 %
+
+
+--------------------------------------------------------------------------------------------------------------------------------
+errorDict,configDict = test_mlp(dataset="data/backgroundVarImg.pkl.gz")
+Optimization complete. Best validation score of 98.710134 % obtained at iteration 3500, with test performance 25.512000 %
+The code for file menteeNetwork.py ran for 17.55m
+     epoch 200, minibatch 500/500, test error of best model 25.512000 % 
+
+adamant:
+Optimization complete. Best validation score of 108.596152 % obtained at iteration 18500, with test performance 25.234000 %
+The code for file menteeNetwork.py ran for 20.12m
+     epoch 200, minibatch 500/500, test error of best model 25.234000 %
