@@ -1,1 +1,29 @@
-This is a Mentee Network 
+This is a Mentee Network implementation done using theano
+
+Requirements:
+Python Libraries
+thenao 0.1 
+numpy
+
+Dataset:
+Taken from http://www.iro.umontreal.ca/~lisa/twiki/bin/view.cgi/Public/DeepVsShallowComparisonICML2007
+Made into theano/project ready format made availabe at: 
+https://www.dropbox.com/sh/93u6xsrew0ec7cw/AACIYVQ13yEmaK-311zqxzx7a?dl=0
+The files should be saved in the data folder 
+The name of the dataset files are:
+MNIST basic 	- mnist.pkl.gz
+MNIST + background images -	backgroundVarImg.pkl.gz
+MNIST + random background - backgroundRanImg.pkl.gz	
+Rotated MNIST digits - rotateImg.pkl.gz
+
+
+Steps to run Mentor:
+run the theanoMlP.py to run the mentor network.
+At the end of the run best_model_mlp_params.pkl is created which stores the parameters learned by mentor
+Data variations can be tried out by editing the dataset file name in main function
+
+Steps to run the mentee:
+run the mentee.py to run the mentor network.
+We have provided the MNIST datasets learned parameter, so directly running the mentee file will work
+Plots for the run are displayed at the end and are saved in the plots folder
+Data variations can be tried out by editing the dataset file name in main function
